@@ -12,8 +12,8 @@ import (
 	"regexp"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	cfg "github.com/kartmos/bot-insta/config"
-	rapid "github.com/kartmos/bot-insta/internal/external/rapid"
+	cfg "github.com/kartmos/scraper-bot/config"
+	rapid "github.com/kartmos/scraper-bot/internal/external/rapid"
 )
 
 const (

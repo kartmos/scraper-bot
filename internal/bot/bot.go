@@ -10,12 +10,11 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	cfg "github.com/kartmos/bot-insta/config"
+	cfg "github.com/kartmos/scraper-bot/config"
 )
 
 var Queue = NewQueue()
 var ErrChan chan string
-var ChatIdChan chan int64
 
 const (
 	sessionLive = 2 * time.Second
@@ -62,14 +61,15 @@ func StartBot() {
 
 	for update := range updates {
 
+		if update.Message == nil {
+			continue
+		}
+
 		log.Printf("[Get Update] ChatID: %d | UserID: %d | Text: %q",
 			update.Message.Chat.ID,
 			update.Message.From.ID,
 			update.Message.Text)
 
-		if update.Message == nil {
-			continue
-		}
 		find := finderSession(update)
 		if !find {
 			Queue.appendNewSession(update, bot)
@@ -121,6 +121,10 @@ func NewSession(update tgbotapi.Update, bot *tgbotapi.BotAPI) *UserSession {
 // delete session after deadline
 func deleteFromQueue(session *UserSession) {
 	log.Printf("\n\nСраотал delete\n\n")
+	if session == nil {
+		log.Println("[deleteFromQueue] session is nil — skipping")
+		return
+	}
 	Queue.mu.Lock()
 	defer Queue.mu.Unlock()
 	if Queue.Head == nil {
@@ -190,7 +194,6 @@ func finderSession(update tgbotapi.Update) bool {
 func processing(input []tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	var idx int
 	bridge := make(chan string, 1)
-	ChatIdChan = make(chan int64, 1)
 	delbridge := make(chan []tgbotapi.DeleteMessageConfig, 1)
 
 	if len(input) == 2 {
@@ -198,7 +201,6 @@ func processing(input []tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	} else {
 		idx = 0
 	}
-	ChatIdChan <- input[idx].Message.Chat.ID
 	BuildDelConfig(input, delbridge)
 	RouteMessege(input[idx], bot, bridge, delbridge)
 

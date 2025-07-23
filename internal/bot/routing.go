@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/kartmos/bot-insta/internal/downloader"
+	"github.com/kartmos/scraper-bot/internal/downloader"
 )
 
 const (
@@ -133,6 +133,7 @@ func videoSender(input tgbotapi.Update, bot *tgbotapi.BotAPI, bridge <-chan stri
 	if _, err := bot.Send(videoMsg); err != nil {
 		log.Printf("[videoSender]Error while bot try send video file %s\n", err)
 		ErrChan <- fmt.Sprintf("[videoSender]Error while bot try send video file %s\n", err)
+		SendErrorMessageChat(input, bot)
 		return
 	}
 }

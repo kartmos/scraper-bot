@@ -1,4 +1,4 @@
-module github.com/kartmos/bot-insta
+module github.com/kartmos/scraper-bot
 
 go 1.24.0
 

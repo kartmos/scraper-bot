@@ -27,25 +27,23 @@ func ErrCollector(errChan chan string, bot *tgbotapi.BotAPI) {
 	for {
 		select {
 		case err := <-errChan:
-			msg.Text += fmt.Sprintf("[WARN]: %s\n", err)
+			msg.Text += fmt.Sprintf("\n[WARN]: %s\n", err)
 			timer.Reset(10 * time.Second)
 
 		case <-timer.C:
 			if msg.Text != "" {
 				bot.Send(msg)
-				SendErrorMessageChat(bot)
 				msg.Text = ""
-
 			}
 
 		}
 	}
 }
 
-func SendErrorMessageChat(bot *tgbotapi.BotAPI) {
-	ChatID := <-ChatIdChan
+func SendErrorMessageChat(input tgbotapi.Update, bot *tgbotapi.BotAPI) {
+	ChatID := input.Message.Chat.ID
 	log.Printf("MSG in SendErrorMessageChat: %d", ChatID)
-	msgChat := tgbotapi.NewMessage(ChatID, "")
-	msgChat.Text = "Что-то пошло не так. Пожалуйста, попробуйте позже."
-	bot.Send(msgChat)
+	msgErr := tgbotapi.NewMessage(ChatID, "")
+	msgErr.Text = "Пу-пу-пууу... Не получилось его скачать"
+	bot.Send(msgErr)
 }

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/kartmos/bot-insta/internal/bot"
+	"github.com/kartmos/scraper-bot/internal/bot"
 	"github.com/spf13/viper"
 )
 
