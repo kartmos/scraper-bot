@@ -1,0 +1,6 @@
+.git
+*.md
+*.log
+*.DS_Store
+bin/
+downloads/*

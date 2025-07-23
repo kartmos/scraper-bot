@@ -1,0 +1,15 @@
+# Go
+/bin/*
+!/bin/.gitkeep
+/config/config.yaml
+*.exe
+*.test
+*.jpg
+*.log
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+*.env
