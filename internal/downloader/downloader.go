@@ -44,11 +44,10 @@ func ParseReel(link string, input tgbotapi.Update, ErrChan chan string) {
 	for _, element := range rePatInsta.FindAllStringSubmatch(link, -1) {
 		code = element[1]
 	}
-	log.Printf("[ParseReel] CODE Error while build url for rapidApi: %s\n", code)
 
 	url := apiURL1 + code
 	response, err := rapid.GetUrlReel(url, cfg.Config.RapidToken)
-	log.Printf("[ParseReel] RESPONCE Error while build url for rapidApi: %s\n", response)
+
 	if err != nil || response == "" {
 		log.Printf("[ParseReel] Error while build url for rapidApi: %s\n", err)
 		ErrChan <- fmt.Sprintf("[ParseReel] Error while build url for rapidApi: %s\n", err)
@@ -58,7 +57,6 @@ func ParseReel(link string, input tgbotapi.Update, ErrChan chan string) {
 	for _, element := range reInsta.FindAllStringSubmatch(response, -1) {
 		capture = element[1]
 	}
-	log.Printf("[ParseReel] CAPTURE Error while build url for rapidApi: %s\n", capture)
 	DownloadReelFile(capture, input, ErrChan)
 }
 

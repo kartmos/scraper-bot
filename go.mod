@@ -33,4 +33,4 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
-replace github.com/go-telegram-bot-api/telegram-bot-api/v5 => github.com/kartmos/kartmos-telegram-bot-api/v5 v5.0.0-20250724183335-fc40adca19d8
+replace github.com/go-telegram-bot-api/telegram-bot-api/v5 => github.com/kartmos/kartmos-telegram-bot-api/v5 v5.0.0-20250724201749-c716745d4486

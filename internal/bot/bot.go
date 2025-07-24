@@ -51,7 +51,7 @@ func StartBot() {
 		log.Printf("[Start] Bot doesn't born: %s", err)
 		ErrChan <- fmt.Sprintf("[Start] Bot doesn't born: %s", err)
 	}
-	bot.Debug = false
+	bot.Debug = true
 
 	go ErrCollector(ErrChan, bot)
 
@@ -111,21 +111,19 @@ func NewSession(update tgbotapi.Update, bot *tgbotapi.BotAPI) *UserSession {
 		Next:   nil,
 	}
 	session.Timer = time.AfterFunc(sessionLive, func() {
-		log.Printf("[DEBUG] Вызван таймер для session %p", session)
 		processing(session.Val, bot)
 		deleteFromQueue(session)
 	})
-	log.Printf("[DEBUG] NewSession ptr = %p", session)
 	return session
 }
 
 // delete session after deadline
 func deleteFromQueue(session *UserSession) {
-	log.Printf("\n\nСраотал delete\n\n")
+
 	if session == nil {
-		log.Println("[deleteFromQueue] session is nil — skipping")
 		return
 	}
+	
 	Queue.mu.Lock()
 	defer Queue.mu.Unlock()
 	if Queue.Head == nil {
@@ -134,7 +132,6 @@ func deleteFromQueue(session *UserSession) {
 	curr := Queue.Head
 	for curr != nil {
 		if curr == session {
-			log.Printf("[deleteFromQueue] нашли %p — удаляем", curr)
 			if curr.Prev != nil {
 				curr.Prev.Next = curr.Next
 			} else {
@@ -147,7 +144,6 @@ func deleteFromQueue(session *UserSession) {
 		}
 		curr = curr.Next
 	}
-	log.Printf("[deleteFromQueue] session %p не найдена в списке", session)
 }
 
 // creat new session at the end of QueueSessionList
@@ -159,7 +155,6 @@ func (q *QueueSessionList) appendNewSession(update tgbotapi.Update, bot *tgbotap
 
 	if q.Head == nil {
 		q.Head = newSession
-		log.Printf("[DEBUG] Добавили session в очередь: %p", newSession)
 		return
 	}
 
@@ -170,7 +165,6 @@ func (q *QueueSessionList) appendNewSession(update tgbotapi.Update, bot *tgbotap
 
 	newSession.Prev = curr
 	curr.Next = newSession
-	log.Printf("[DEBUG] Добавили session в очередь: %p", newSession)
 }
 
 func finderSession(update tgbotapi.Update) bool {

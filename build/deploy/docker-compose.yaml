@@ -7,6 +7,6 @@ services:
       context: ../../
       dockerfile: build/deploy/Dockerfile
     container_name: bot
-    image: opezdal
+    image: opezdal-beta
 
     restart: unless-stopped

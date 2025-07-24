@@ -37,8 +37,9 @@ func ExtcractDomain(url string) string {
 func RouteMessege(input tgbotapi.Update, bot *tgbotapi.BotAPI, bridge <-chan string, delbridge chan []tgbotapi.DeleteMessageConfig) {
 
 	if strings.ToLower(input.Message.Text) == "умер?" {
-		msg := tgbotapi.NewMessage(input.Message.From.ID, "Нет")
+		msg := tgbotapi.NewMessage(input.Message.Chat.ID, "Нет\n")
 		msg.MessageThreadID = input.Message.MessageThreadID
+		msg.Text += fmt.Sprintf("Update input %v\n Threads input %v\n Threads msg %v", input, input.Message.MessageThreadID, msg.MessageThreadID)
 		bot.Send(msg)
 		return
 	}
@@ -195,8 +196,8 @@ func videoSender(input tgbotapi.Update, bot *tgbotapi.BotAPI, bridge <-chan stri
 func compressVideoFFMPEGGo(inputPath, outputPath string) error {
 	return ffmpeg.Input(inputPath).
 		Output(outputPath, ffmpeg.KwArgs{
-			"b:v":     "1M",
-			"bufsize": "1M",
+			"b:v":     "3.5M",
+			"bufsize": "8M",
 		}).
 		OverWriteOutput().
 		Run()
