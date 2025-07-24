@@ -3,15 +3,22 @@ package bot
 
 import (
 	"fmt"
+	"io"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/kartmos/scraper-bot/internal/downloader"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/shirou/gopsutil/disk"
+	"github.com/shirou/gopsutil/mem"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 )
 
 const (
@@ -69,20 +76,10 @@ func Cleaner(delbridge chan []tgbotapi.DeleteMessageConfig, bot *tgbotapi.BotAPI
 func commandHendler(input tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	msg := tgbotapi.NewMessage(input.Message.Chat.ID, "")
 	switch input.Message.Command() {
-	// case "adminID":
-	// 	if adminID == 0 && input.Message.Text == "/admin 9f7aD!4tKz" {
-	// 		adminID = input.Message.From.ID
-	// 		msg.Text = "Теперь ты стал админом"
-	// 		bot.Send(msg)
-	// 	}
-	// 	if input.Message.From.ID != adminID {
-	// 		msg.Text = "Пу-пу-пу. А админ уже назначен."
-	// 		bot.Send(msg)
-	// 	}
 	case "help":
 		helpText, err := loadText("./asserts/help.txt")
 		if err != nil {
-			log.Println("Ошибка чтения приветствия:", err)
+			log.Println("Ошибка чтения инструкции:", err)
 			ErrChan <- fmt.Sprintf("[WARN]Error when bot try read file help.txt: %s\n", err)
 		}
 
@@ -101,6 +98,23 @@ func commandHendler(input tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		msg := tgbotapi.NewMessage(input.Message.Chat.ID, welcome)
 		msg.ParseMode = "Markdown"
 		bot.Send(msg)
+	case "status":
+		if input.Message.From.ID != adminID {
+			msg.Text = "You not admin"
+			bot.Send(msg)
+			return
+		}
+		handleStatusCommand(input, bot)
+	case "log":
+		if input.Message.From.ID != adminID {
+			msg.Text = "You not admin"
+			bot.Send(msg)
+			return
+		}
+		logfile := ("/app/logs/bot.log")
+		doc := tgbotapi.NewDocument(adminID, tgbotapi.FilePath(logfile))
+		bot.Send(doc)
+
 	default:
 		msg.Text = "Такой команды не сущетсвует\nВот список моих команды:\n/help..."
 		bot.Send(msg)
@@ -123,12 +137,29 @@ func HandleCallback(input tgbotapi.Update, bot *tgbotapi.BotAPI) {
 func videoSender(input tgbotapi.Update, bot *tgbotapi.BotAPI, bridge <-chan string) {
 
 	file := videoFileFinder(videoPath, input)
-	if file != "" {
-		defer os.Remove(file)
+	defer os.Remove(file)
+
+	info, err := os.Stat(file)
+	if err != nil {
+		log.Printf("[videoSender] Error when bot try get size videofile: %s\n", err)
+		ErrChan <- fmt.Sprintf("[videoSender] Error when bot try get size videofile: %s\n", err)
+	}
+
+	sizeMB := float64(info.Size()) / (1024 * 1024)
+	finalFile := file
+	if sizeMB > 50 {
+		compressed := strings.TrimSuffix(file, ".mp4") + "_compressed.mp4"
+		err := compressVideoFFMPEGGo(file, compressed)
+		if err != nil {
+			ErrChan <- fmt.Sprintf("[compressVideoFFMPEGGo] Ошибка сжатия: %s", err)
+			return
+		}
+		defer os.Remove(compressed)
+		finalFile = compressed
 	}
 
 	var videoMsg tgbotapi.VideoConfig
-	videoMsg = BuildVideoMsg(input, file, bridge)
+	videoMsg = BuildVideoMsg(input, finalFile, bridge)
 
 	if _, err := bot.Send(videoMsg); err != nil {
 		log.Printf("[videoSender]Error while bot try send video file %s\n", err)
@@ -136,6 +167,16 @@ func videoSender(input tgbotapi.Update, bot *tgbotapi.BotAPI, bridge <-chan stri
 		SendErrorMessageChat(input, bot)
 		return
 	}
+}
+
+func compressVideoFFMPEGGo(inputPath, outputPath string) error {
+	return ffmpeg.Input(inputPath).
+		Output(outputPath, ffmpeg.KwArgs{
+			"b:v":     "1M",
+			"bufsize": "1M",
+		}).
+		OverWriteOutput().
+		Run()
 }
 
 func videoFileFinder(dir string, update tgbotapi.Update) string {
@@ -152,18 +193,51 @@ func videoFileFinder(dir string, update tgbotapi.Update) string {
 	}
 }
 
-// func RouteParserMethod(input tgbotapi.Update, link string, resMsg tgbotapi.MessageConfig, bot *tgbotapi.BotAPI) {
-// 	videoPath, err := d.DownloadFile(link)
-// 	if err != nil {
-// 		resMsg.Text = "Я сломався"
-// 	}
-// 	defer os.Remove(videoPath)
-// 	video := tgbotapi.NewVideo(input.Message.Chat.ID, tgbotapi.FilePath(videoPath))
-// 	resMsg.Text = "!!!ВНИМАНИЕ МЕМ!!!"
-// 	if _, err := bot.Send(msg); err != nil {
-// 		log.Panic(err)
-// 	}
-// 	if _, err := bot.Send(video); err != nil {
-// 		resMsg.Text = "Видно был не очень рилс и я его не донес"
-// 	}
-// }
+var startTime = time.Now()
+
+func handleStatusCommand(input tgbotapi.Update, bot *tgbotapi.BotAPI) {
+	uptime := time.Since(startTime).Truncate(time.Second)
+	cpuPercents, _ := cpu.Percent(0, false)
+	cpuUsage := 0.0
+	if len(cpuPercents) > 0 {
+		cpuUsage = cpuPercents[0]
+	}
+
+	memStats, _ := mem.VirtualMemory()
+	diskStats, _ := disk.Usage("/")
+
+	sessionCount := 0
+	Queue.mu.Lock()
+	for s := Queue.Head; s != nil; s = s.Next {
+		sessionCount++
+	}
+	Queue.mu.Unlock()
+
+	ip := "unknown"
+	if resp, err := http.Get("https://api.ipify.org"); err == nil {
+		defer resp.Body.Close()
+		if body, err := io.ReadAll(resp.Body); err == nil {
+			ip = string(body)
+		}
+	}
+
+	msg := fmt.Sprintf(
+		"📊 Bot Status\n\n"+
+			"⏱ Uptime: %s\n"+
+			"🧠 CPU: %.2f%%\n"+
+			"💾 RAM: %.2f%% (%.2f GB total)\n"+
+			"📀 Disk: %.2f%% (%.2f GB free)\n"+
+			"👥 Active Sessions: %d\n"+
+			"🌍 IP: %s",
+		uptime,
+		cpuUsage,
+		memStats.UsedPercent,
+		float64(memStats.Total)/1e9,
+		diskStats.UsedPercent,
+		float64(diskStats.Free)/1e9,
+		sessionCount,
+		ip,
+	)
+
+	bot.Send(tgbotapi.NewMessage(input.Message.Chat.ID, msg))
+}

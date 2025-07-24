@@ -27,7 +27,6 @@ type SharingLink struct {
 	Comment *string
 }
 
-var outputPath string = "./bin"
 var rePatInsta *regexp.Regexp = regexp.MustCompile(PatInsta)
 var reInsta *regexp.Regexp = regexp.MustCompile(videoPatInsta)
 var code string
