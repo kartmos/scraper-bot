@@ -85,6 +85,7 @@ func StartBot() {
 					}
 
 					msg := tgbotapi.NewMessage(update.Message.Chat.ID, welcome)
+					msg.MessageThreadID=update.Message.MessageThreadID
 					msg.ParseMode = "Markdown"
 					bot.Send(msg)
 				}

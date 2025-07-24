@@ -42,8 +42,12 @@ func ErrCollector(errChan chan string, bot *tgbotapi.BotAPI) {
 
 func SendErrorMessageChat(input tgbotapi.Update, bot *tgbotapi.BotAPI) {
 	ChatID := input.Message.Chat.ID
-	log.Printf("MSG in SendErrorMessageChat: %d", ChatID)
+	log.Printf("MSG in SendErrorMessageChat: %d\n", ChatID)
 	msgErr := tgbotapi.NewMessage(ChatID, "")
+	msgErr.MessageThreadID = input.Message.MessageThreadID
+	msgErrAdmin := tgbotapi.NewMessage(adminID, "")
+	msgErrAdmin.Text = fmt.Sprintf("Error in chat %v\n\nMessage: %s", input.FromChat().Title, input.Message.Text)
 	msgErr.Text = "Пу-пу-пууу... Не получилось его скачать"
 	bot.Send(msgErr)
+	bot.Send(msgErrAdmin)
 }

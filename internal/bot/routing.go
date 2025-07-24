@@ -36,6 +36,13 @@ func ExtcractDomain(url string) string {
 
 func RouteMessege(input tgbotapi.Update, bot *tgbotapi.BotAPI, bridge <-chan string, delbridge chan []tgbotapi.DeleteMessageConfig) {
 
+	if strings.ToLower(input.Message.Text) == "умер?" {
+		msg := tgbotapi.NewMessage(input.Message.From.ID, "Нет")
+		msg.MessageThreadID = input.Message.MessageThreadID
+		bot.Send(msg)
+		return
+	}
+
 	if input.Message.IsCommand() {
 		commandHendler(input, bot)
 		return
@@ -74,7 +81,9 @@ func Cleaner(delbridge chan []tgbotapi.DeleteMessageConfig, bot *tgbotapi.BotAPI
 }
 
 func commandHendler(input tgbotapi.Update, bot *tgbotapi.BotAPI) {
-	msg := tgbotapi.NewMessage(input.Message.Chat.ID, "")
+	msgcmd := tgbotapi.NewMessage(input.Message.Chat.ID, "")
+	msgcmd.MessageThreadID = input.Message.MessageThreadID
+
 	switch input.Message.Command() {
 	case "help":
 		helpText, err := loadText("./asserts/help.txt")
@@ -83,42 +92,55 @@ func commandHendler(input tgbotapi.Update, bot *tgbotapi.BotAPI) {
 			ErrChan <- fmt.Sprintf("[WARN]Error when bot try read file help.txt: %s\n", err)
 		}
 
-		msg := tgbotapi.NewMessage(input.Message.Chat.ID, helpText)
-		msg.ParseMode = "Markdown"
-		bot.Send(msg)
+		msgcmd.Text = helpText
+		msgcmd.ParseMode = "Markdown"
+		bot.Send(msgcmd)
 
-		// photo := tgbotapi.NewPhoto(input.Message.Chat.ID, tgbotapi.FilePath("./asserts/help.jpg"))
-		// bot.Send(photo)
 	case "start":
 		welcome, err := loadText("./asserts/welcome.txt")
 		if err != nil {
 			log.Println("Ошибка чтения приветствия:", err)
 		}
 
-		msg := tgbotapi.NewMessage(input.Message.Chat.ID, welcome)
-		msg.ParseMode = "Markdown"
-		bot.Send(msg)
+		msgcmd.Text = welcome
+		msgcmd.ParseMode = "Markdown"
+		bot.Send(msgcmd)
+
 	case "status":
 		if input.Message.From.ID != adminID {
-			msg.Text = "You not admin"
-			bot.Send(msg)
+			msgcmd.Text = "You not admin"
+			bot.Send(msgcmd)
 			return
 		}
-		handleStatusCommand(input, bot)
+
+		msgcmd.Text = handleStatusCommand(input, bot)
+		bot.Send(msgcmd)
+
 	case "log":
 		if input.Message.From.ID != adminID {
-			msg.Text = "You not admin"
-			bot.Send(msg)
+			msgcmd.Text = "You not admin"
+			bot.Send(msgcmd)
 			return
 		}
 		logfile := ("/app/logs/bot.log")
 		doc := tgbotapi.NewDocument(adminID, tgbotapi.FilePath(logfile))
+		doc.MessageThreadID = input.Message.MessageThreadID
 		bot.Send(doc)
 
 	default:
-		msg.Text = "Такой команды не сущетсвует\nВот список моих команды:\n/help..."
+		commandText, err := loadText("./asserts/command.txt")
+		if err != nil {
+			log.Println("Ошибка чтения инструкции команд:", err)
+			ErrChan <- fmt.Sprintf("[WARN]Error when bot try read file command.txt: %s\n", err)
+		}
+
+		msgcmd.Text = commandText
+		msgcmd.ParseMode = "Markdown"
+		msg := tgbotapi.NewMessage(input.Message.Chat.ID, "")
+		msg.MessageThreadID = input.Message.MessageThreadID
+		msg.Text = "Такой команды не сущетсвует\n🗿Вот список моих команды:\n"
 		bot.Send(msg)
-		//будет дописываться
+		bot.Send(msgcmd)
 	}
 }
 
@@ -160,6 +182,7 @@ func videoSender(input tgbotapi.Update, bot *tgbotapi.BotAPI, bridge <-chan stri
 
 	var videoMsg tgbotapi.VideoConfig
 	videoMsg = BuildVideoMsg(input, finalFile, bridge)
+	videoMsg.MessageThreadID = input.Message.MessageThreadID
 
 	if _, err := bot.Send(videoMsg); err != nil {
 		log.Printf("[videoSender]Error while bot try send video file %s\n", err)
@@ -195,7 +218,7 @@ func videoFileFinder(dir string, update tgbotapi.Update) string {
 
 var startTime = time.Now()
 
-func handleStatusCommand(input tgbotapi.Update, bot *tgbotapi.BotAPI) {
+func handleStatusCommand(input tgbotapi.Update, bot *tgbotapi.BotAPI) string {
 	uptime := time.Since(startTime).Truncate(time.Second)
 	cpuPercents, _ := cpu.Percent(0, false)
 	cpuUsage := 0.0
@@ -238,6 +261,5 @@ func handleStatusCommand(input tgbotapi.Update, bot *tgbotapi.BotAPI) {
 		sessionCount,
 		ip,
 	)
-
-	bot.Send(tgbotapi.NewMessage(input.Message.Chat.ID, msg))
+	return msg
 }
