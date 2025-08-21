@@ -33,7 +33,7 @@ jobs:
         run: |
           go mod download
       - name: Build the Docker image
-        run: docker build ./build/deploy --file Dockerfile --tag my-image-name:$(date +%s)
+        run: docker build . -f build/deploy/Dockerfile -t my-image-name:$(date +%s)
 
     #   - name: Run golangci-lint
     #     uses: golangci/golangci-lint-action@v6
