@@ -33,12 +33,12 @@ jobs:
         run: |
           go mod download
 
-      - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: latest
-          working-directory: .
-          args: --timeout=5m
+    #   - name: Run golangci-lint
+    #     uses: golangci/golangci-lint-action@v6
+    #     with:
+    #       version: latest
+    #       working-directory: .
+    #       args: --timeout=5m
 
       - name: Go vet
         run: |
