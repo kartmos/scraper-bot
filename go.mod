@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/fsnotify/fsnotify v1.8.0
-	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
+	github.com/kartmos/kartmos-telegram-bot-api/v5 v5.5.1-kartmos.0
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/spf13/viper v1.20.1
 	github.com/u2takey/ffmpeg-go v0.5.0
@@ -32,5 +32,3 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/go-telegram-bot-api/telegram-bot-api/v5 => github.com/kartmos/kartmos-telegram-bot-api/v5 v5.0.0-20250724214922-947e76feb66d

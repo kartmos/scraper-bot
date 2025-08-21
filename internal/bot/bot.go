@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/kartmos/kartmos-telegram-bot-api/v5"
 	cfg "github.com/kartmos/scraper-bot/config"
 )
 
@@ -46,11 +46,13 @@ func StartBot() {
 	cfg.Config.CheckConfig()
 	log.Println("[DONE] Set options from config file")
 	token := os.Getenv("BOT_TOKEN")
+
 	bot, err := tgbotapi.NewBotAPI(token)
 	if err != nil {
 		log.Printf("[Start] Bot doesn't born: %s", err)
 		ErrChan <- fmt.Sprintf("[Start] Bot doesn't born: %s", err)
 	}
+
 	bot.Debug = true
 
 	go ErrCollector(ErrChan, bot)
@@ -58,7 +60,7 @@ func StartBot() {
 	u := tgbotapi.NewUpdate(0)
 	u.Timeout = 60
 	updates := bot.GetUpdatesChan(u)
-
+ 
 	for update := range updates {
 
 		if update.Message == nil {

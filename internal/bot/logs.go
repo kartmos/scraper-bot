@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/kartmos/kartmos-telegram-bot-api/v5"
 )
 
 func ErrCollector(errChan chan string, bot *tgbotapi.BotAPI) {

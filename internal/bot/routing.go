@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/kartmos/kartmos-telegram-bot-api/v5"
 	"github.com/kartmos/scraper-bot/internal/downloader"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/shirou/gopsutil/disk"

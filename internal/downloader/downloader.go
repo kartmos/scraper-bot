@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"regexp"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/kartmos/kartmos-telegram-bot-api/v5"
 	cfg "github.com/kartmos/scraper-bot/config"
 	rapid "github.com/kartmos/scraper-bot/internal/external/rapid"
 )

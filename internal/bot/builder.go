@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	tgbotapi "github.com/kartmos/kartmos-telegram-bot-api/v5"
 )
 
 func BuildDelConfig(input []tgbotapi.Update, delbridge chan<- []tgbotapi.DeleteMessageConfig) {
