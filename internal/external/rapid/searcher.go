@@ -1,4 +1,4 @@
-package repid
+package rapid
 
 import (
 	"fmt"
