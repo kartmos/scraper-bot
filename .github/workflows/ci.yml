@@ -1,0 +1,68 @@
+name: CI (lint, test, docker build)
+
+on:
+  push:
+    branches:
+      - "**"
+  pull_request:
+    branches:
+      - "**"
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Go from go.mod
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          check-latest: true
+
+      - name: Go version
+        run: |
+          go version
+
+      - name: Download dependencies
+        run: |
+          go mod download
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: .
+          args: --timeout=5m
+
+      - name: Go vet
+        run: |
+          go vet ./...
+
+      - name: Go test
+        run: |
+          # объяснение: прогоняем тесты с подробным выводом
+          go test -v ./...
+
+      - name: Go build (binary)
+        run: |
+          mkdir -p bin
+          go build -o bin/bot ./cmd/app
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker build (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: build/deploy/Dockerfile
+          push: false
+          tags: ${{ github.repository }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
