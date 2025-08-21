@@ -18,7 +18,6 @@ WORKDIR /app
 RUN apk add --no-cache curl procps ffmpeg
 COPY --from=builder /app/bot .
 COPY --from=builder /app/bin/yt-dlp /app/bin/yt-dlp
-COPY --from=builder /app/config/config.yaml /app/config/
 COPY --from=builder /app/asserts /app/asserts
 
 RUN mkdir -p /app/downloads
