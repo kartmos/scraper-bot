@@ -16,6 +16,8 @@ FROM alpine:latest
 
 WORKDIR /app
 RUN apk add --no-cache curl procps ffmpeg
+ENV YT_DLP_PATH=/app/bin/yt-dlp
+ENV LOG_FILE=/app/logs/bot.log
 COPY --from=builder /app/bot .
 COPY --from=builder /app/bin/yt-dlp /app/bin/yt-dlp
 COPY --from=builder /app/asserts /app/asserts

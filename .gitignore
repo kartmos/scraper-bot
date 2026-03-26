@@ -9,6 +9,7 @@
 
 # IDE
 .vscode/
+.cache/
 
 # OS
 .DS_Store
